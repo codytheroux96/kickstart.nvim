@@ -606,7 +606,7 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -647,6 +647,9 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'gopls',  -- Go language server
+        'golangci-lint', -- Go linter
+        'gofumpt', -- Go formatter
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -699,6 +702,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        go = { 'gofumpt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -888,7 +892,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'go' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -929,7 +933,7 @@ require('lazy').setup({
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -950,6 +954,25 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "go",
+  callback = function()
+    -- Set up Go-specific keymaps
+    local map = function(keys, func, desc)
+      vim.keymap.set('n', keys, func, { buffer = true, desc = desc })
+    end
+
+    map("<leader>gt", ":GoTest<CR>", "Go Test")
+    map("<leader>gtf", ":GoTestFunc<CR>", "Go Test Function")
+    map("<leader>gi", ":GoImports<CR>", "Go Imports")
+    map("<leader>gr", ":GoRun<CR>", "Go Run")
+
+    -- Set indentation to tabs for Go files
+    vim.bo.expandtab = false
+    vim.bo.tabstop = 4
+    vim.bo.shiftwidth = 4
+  end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
